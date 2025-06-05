@@ -1,0 +1,29 @@
+server:
+
+  listen: 8080
+
+  workers: 2
+
+  upstreams:
+    - id: node1
+      url: http://localhost:8001
+
+    - id: node2
+      url: http://localhost:8002
+    
+    - id: node3
+      url: http://localhost:8003
+  
+  headers:
+    - key: Authorization
+      value: 'Bearer $token'
+
+  rules:
+    - path: /
+      upstreams:
+        - node1
+        - node2
+
+    - path: /admin
+      upstreams:
+        - node3
