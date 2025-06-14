@@ -1,12 +1,12 @@
 server:
 
-  listen: 8080
+  listen: 8089
 
-  workers: 2
+  workers: 4
 
   upstreams:
     - id: node1
-      url: http://localhost:8001
+      url: https://jsonplaceholder.typicode.com
 
     - id: node2
       url: http://localhost:8002
@@ -24,6 +24,6 @@ server:
         - node1
         - node2
 
-    - path: /admin
+    - path: /todos
       upstreams:
-        - node3
+        - node1

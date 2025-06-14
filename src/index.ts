@@ -1,46 +1,24 @@
 import { program } from "commander";
-import Cluster from "node:cluster";
-import { parseYAMLConfig, validateConfig } from './config'
-import os from 'node:os'
-
-
-interface CreateConfigServerInterface {
-    port: number,
-    worker_count: number
-}
-
-
-async function createConfigServer(config: CreateConfigServerInterface) {
-
-    const { worker_count } = config;
-
-    if (Cluster.isPrimary) {
-        console.log('master process is running...');
-        for (let i = 0; i < worker_count; i++) {
-            Cluster.fork()
-            console.log("worker process is spinned up ", i);
-        }
-    }
-    else {
-        console.log("i am worker process");
-    }
-
-}
+import ConfigServer from "./server";
 
 
 async function main() {
-    program.option('--config <char>');
-    program.parse()
+    program.requiredOption('--config <path>', 'path to config file').parse();
 
-    const options = program.opts()
+    const options = program.opts();
     if (options && 'config' in options) {
-        
-        const validatedConfig = await validateConfig(await parseYAMLConfig(options.config))
-        createConfigServer({port: validatedConfig.server.listen, worker_count: validatedConfig.server.workers ?? os.cpus().length})
+        const filepath = options.config;
+        const server = new ConfigServer()
+        await server.start(filepath)
+    }
+    else {
+        throw new Error("Invalid options");
     }
 
 }
 
 
-
-main()
+main().catch(err => {
+    console.error('Server failed:', err);
+    process.exit(1);
+});

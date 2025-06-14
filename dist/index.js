@@ -13,34 +13,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const commander_1 = require("commander");
-const node_cluster_1 = __importDefault(require("node:cluster"));
-const config_1 = require("./config");
-const node_os_1 = __importDefault(require("node:os"));
-function createConfigServer(config) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const { worker_count } = config;
-        if (node_cluster_1.default.isPrimary) {
-            console.log('master process is running...');
-            for (let i = 0; i < worker_count; i++) {
-                node_cluster_1.default.fork();
-                console.log("worker process is spinned up ", i);
-            }
-        }
-        else {
-            console.log("i am worker process");
-        }
-    });
-}
+const server_1 = __importDefault(require("./server"));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        var _a;
-        commander_1.program.option('--config <char>');
-        commander_1.program.parse();
+        commander_1.program.requiredOption('--config <path>', 'path to config file').parse();
         const options = commander_1.program.opts();
         if (options && 'config' in options) {
-            const validatedConfig = yield (0, config_1.validateConfig)(yield (0, config_1.parseYAMLConfig)(options.config));
-            createConfigServer({ port: validatedConfig.server.listen, worker_count: (_a = validatedConfig.server.workers) !== null && _a !== void 0 ? _a : node_os_1.default.cpus().length });
+            const filepath = options.config;
+            const server = new server_1.default();
+            yield server.start(filepath);
+        }
+        else {
+            throw new Error("Invalid options");
         }
     });
 }
-main();
+main().catch(err => {
+    console.error('Server failed:', err);
+    process.exit(1);
+});
